@@ -1,5 +1,6 @@
 #===============================================================================
-# 2021-02-23 -- outliving Demographic Research reproducibility package
+# 2021-02-24 -- Vaupel, J. W., Bergeron Boucher, M.-P., & Kashnitsky, I. (2020). Outsurvival as a measure of the inequality of lifespans between two populations
+# Demographic Research reproducibility package
 # Replicate all the figures and calculations
 # Marie-Pier Bergeron-Boucher, mpbergeron@sdu.dk (examples)
 # Ilya Kashnitsky, ilya.kashnitsky@gmail.com (dataviz + code review)
@@ -11,7 +12,6 @@ library(tidyverse)
 library(magrittr)
 library(patchwork)
 library(hrbrthemes)
-library(msm)
 
 
 # ggplot theme setup ------------------------------------------------------
@@ -27,6 +27,7 @@ theme_set(
 
 # colors
 pal <- c("#ef5350", "#002171")
+
 
 # Fig 1 -- French males and females -----------------------------------
 
@@ -160,99 +161,46 @@ unique(df_fr$Sex)
 age <- 65:110
 n <- length(age)
 
-#### Function to simulate lifespan ####
-sim <- function(nsim, Mx, s.age){
-    l <- length(Mx) - 1
-    lt <- as.data.frame(msm::rpexp(n = nsim, rate = Mx, 0:l))
-    names(lt) <- "lt"
-    lt$lt <- lt$lt + s.age
-    return(lt)}
-
-# number of simulations
-nsim <- 1e6 # a million simulations
-
 
 #### The data by sex ####
 
-## Females
+## Female population
 
-# Life table
+# life table
 LT_F <- df_fr[df_fr$Sex == "Females", ]
 
-# Simulations
-simF <- sim(nsim, LT_F$mx[age + 1], s.age = 65)
+# dx
+dxF <- LT_F$dx[age + 1] / sum(LT_F$dx[age + 1])
+
+# lx
+lxF<- c(1, 1 - cumsum(dxF)[1:(n - 1)])
 
 
-## Males
+## Male population
 
-# Life table
+# life table
 LT_M <- df_fr[df_fr$Sex == "Males", ]
 
-# Simulations
-simM <- sim(nsim, LT_M$mx[age + 1], s.age = 65)
+# dx
+dxM <- LT_M$dx[age + 1] / sum(LT_M$dx[age + 1])
 
+# lx
+lxM<- c(1, 1 - cumsum(dxM)[1:(n - 1)])
 
-#### The dataset ####
-FreqTableF <- prop.table(table(simF$lt))
-dxF <- data.frame(
-    Age = as.numeric(rownames(FreqTableF)),
-    dx_females = as.numeric(FreqTableF)
-)
-
-FreqTableM <- prop.table(table(simM$lt))
-dxM <- data.frame(
-    Age = as.numeric(rownames(FreqTableM)),
-    dx_males = as.numeric(FreqTableM)
-)
-
-dta_dx<-merge(dxF, dxM, by="Age", all.x = TRUE, all.y = TRUE)
-dta_dx[is.na(dta_dx)] <- 0
-
-dta_dx$Dx_females <- cumsum(dta_dx$dx_females)
-dta_dx$Dx_males <- cumsum(dta_dx$dx_males)
-
-
-#### phi based on random pairing ####
-RP<-data.frame(
-    Females=sample(simF$lt),
-    Males=sample(simM$lt)
-)
-
-RP$MoutliveF <- 0
-RP$MoutliveF[RP$Males > RP$Females] <- 1
-
-phi_RP <- length(RP$MoutliveF[RP$MoutliveF == 1]) / nrow(RP)
-phi_RP
-
-
-#### phi based on eq. 6 ####
-phi_eq6 <- sum(dta_dx$dx_males * dta_dx$Dx_females)
-phi_eq6
-
-#### phi based on eq. 1 ####
-phi_eq1 <- sum(dta_dx$dx_females * (1 - dta_dx$Dx_males))
-phi_eq1
 
 #### phi based on discrete approximation (Bergeron-Boucher et al. 2020) ####
-dxF <- LT_F$dx[age + 1] / sum(LT_F$dx[age + 1])
-dxM <- LT_M$dx[age + 1] / sum(LT_M$dx[age + 1])
-DxM <- cumsum(dxM)
-lxM <- c(1, 1 - DxM[1:(n - 1)])
 
-phi_discrete <- sum(dxF[1:(n - 1)] * lxM[2:n]) + sum(dxF * dxM) / 2
+# Phi: probability that males outlive females
+phi_discrete <- sum(dxF[1:(n - 1)] * lxM[2:n]) +
+    sum(dxF * dxM) / 2
 phi_discrete
 
-#### Comparing approaches ####
+# Complement of phi: probability that females outlive males ####
+phi_comp <- sum(dxM[1:(n - 1)] * lxF[2:n]) + sum(dxF * dxM) / 2
+phi_comp
 
-# Random pairing
-round(phi_RP, 4)
-# Equation 1
-round(phi_eq1, 4)
-# Equation 6
-round(phi_eq6, 4)
-# Discrete
-round(phi_discrete, 4)
-
+# Sum check
+phi_discrete + phi_comp
 
 
 
@@ -296,8 +244,9 @@ dxB <- LT_b$dx / LT_b$lx[1]
 # lx
 lxB <- LT_b$lx / LT_b$lx[1]
 
+
 #### phi: probability that non-hispanic black outlive non-hispanic white ####
-n_race <-length(dxW)
+n_race <- length(dxW)
 
 # Phi
 phi_race <- sum(dxW[1:(n_race - 1)] * lxB[2:n_race]) + sum(dxB * dxW) / 2
@@ -310,7 +259,6 @@ phi_race_comp
 
 # Sum check
 phi_race + phi_race_comp
-
 
 
 
@@ -367,15 +315,12 @@ lxG8 <- c(1, 1 - cumsum(dxG8)[1:(n_ed - 1)])
 phi_ed <- sum(dxU[1:(n_ed - 1)] * lxG8[2:n_ed]) + sum(dxU * dxG8) / 2
 phi_ed
 
-
 # Complement of phi: probability that high educated outlive low educated
 phi_ed_comp <- sum(dxG8[1:(n_ed - 1)] * lxU[2:n_ed]) + sum(dxU * dxG8) / 2
 phi_ed_comp
 
-
 # Sum check
 phi_ed + phi_ed_comp
-
 
 
 
@@ -425,7 +370,6 @@ phi_inc <-
     2
 phi_inc
 
-
 # Complement of phi: probability that males have a higher income than females
 phi_inc_comp <-
     sum(dxM_inc[2:n_inc] * FxF_inc[1:(n_inc - 1)]) +
@@ -433,20 +377,20 @@ phi_inc_comp <-
     2
 phi_inc_comp
 
-
 # Sum check
 phi_inc + phi_inc_comp
-
 
 
 
 # Example 5: Populations Italy and Ireland --------------------------------
 
 #### R code to calculate phi for population distribution differences between Italy and Ireland
-#### Based on data from the EUROSTAT
+#### Based on data from the EUROSTAT: EUROSTAT. (2020). Population on 1 January by age and sex. Available at http://appsso.eurostat.ec.europa.eu/nui/show.do?wai=true&dataset=demo_pjan (Accessed on October 23).
 
 #### Load data ####
-df_eu <- read.csv("dat/Population_Italy_Ireland.txt", header = T, sep = ",")
+df_eu <- read.csv(
+    "dat/Population_Italy_Ireland.txt", header = T, sep = ","
+)
 
 head(df_eu)
 dim(df_eu)
@@ -472,7 +416,6 @@ dxIT <- pop_Italy / sum(pop_Italy)
 
 # Dx
 DxIT <- cumsum(dxIT)
-
 
 
 #### phi: probability that an Irish be older than an Italian ####
