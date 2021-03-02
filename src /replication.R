@@ -111,7 +111,7 @@ df_graph %>%
     geom_path(aes(y = dx_f), color = "#ef5350")+
     geom_ribbon(
         aes(ymax = dx_f*lx_Males, ymin = 0, xmin = 65, xmax = 110),
-        alpha = .5, color = NA, fill = "#26a69a"
+        alpha = .5, color = NA, fill = "#7e57c2"
     )+
     geom_ribbon(
         aes(ymax = dx_f, ymin = dx_f*lx_Males, xmin = 65, xmax = 110),
@@ -128,7 +128,7 @@ df_graph %>%
     )+
     annotate(
         "text", x = c(87.5, 92.5), y = c(.05, .004),
-        size = 7, color = c("#ef5350", "#26a69a"),
+        size = 7, color = c("#ef5350", "#4d2c91"),
         family = "Palatino", hjust = 1, fontface = "italic",
         label = c(
             expression(italic(d[2](x))),
