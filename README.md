@@ -1,13 +1,18 @@
-# Replication materials for 
+[![doi](https://img.shields.io/badge/DOI-10.4054%2FDemRes.2021.44.35-lightgrey.svg?style=for-the-badge)][doi]
+[![osf](https://img.shields.io/badge/osf-gsdkx-lightgrey.svg?style=for-the-badge)][osf]
 
-Vaupel, J. W., Bergeron-Boucher, M.-P., & Kashnitsky, I. (2021). Outsurvival as a measure of the inequality of lifespans between two populations. Demographic Research. 
+# Vaupel, J., Bergeron-Boucher, M.-P., & Kashnitsky, I. (2021). Outsurvival as a measure of the inequality of lifespans between two populations. *Demographic Research*, S8(35), 853–864. https://doi.org/10.4054/DemRes.2021.44.35
 
-Twitter: @jwvaupel, @bergeron_mp, @ikashnitsky
+[doi]: https://doi.org/10.4054/DemRes.2021.44.35
+[osf]: https://osf.io/gsdkx/
+[jwv]: https://twitter.com/jwvaupel
+[mp]: https://twitter.com/bergeron_mp
+[ik]: https://twitter.com/ikashnitsky
+
+Twitter: [@jwvaupel][jwv], [@bergeron_mp][mp], [@ikashnitsky][ik]  
 Emails: jvaupel@sdu.dk, mpbergeron@sdu.dk, ikashnitsky@sdu.dk
 
 SocArXiv preprint: https://doi.org/10.31235/osf.io/gsdkx  
-
-Github: https://github.com/CPop-SDU/outsurvival-demres
 
 Zenodo: https://doi.org/10.5281/zenodo.4573914
 
